@@ -73,7 +73,7 @@
                 vidEl.dispatchEvent(new Event('canplaythrough'));
               } catch (e) {}
             }
-          }, 1500);
+          }, 900);
 
           return result;
         }
