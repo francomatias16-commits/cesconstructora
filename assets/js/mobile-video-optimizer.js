@@ -1,12 +1,22 @@
 /**
- * CES Construcciones — Mobile: imágenes estáticas en slides
+ * CES — Mobile Optimizer (definitivo)
  *
- * En móvil los videos están ocultos por CSS y cada slide muestra
- * su imagen poster. Este script solo necesita garantizar que el
- * evento 'canplaythrough' se dispare para que scripts.js pueda
- * avanzar la animación de las diapositivas (aunque no haya video).
+ * POR QUÉ LOS PARCHES ANTERIORES FALLABAN:
+ *   scripts.js es un bundle browserify con jQuery propio. No usa window.jQuery.
+ *   Parchear window.jQuery.fn.on no intercepta nada dentro del bundle.
  *
- * En desktop no hace absolutamente nada.
+ * SOLUCIÓN:
+ *   Parchar EventTarget.prototype.addEventListener (API nativa del browser,
+ *   imposible de bundlear). scripts.js llama internamente a
+ *   elem.addEventListener("canplaythrough", fn) — esta intercepción lo captura.
+ *
+ * QUÉ HACE:
+ *   - En móvil: cada vez que scripts.js registra "canplaythrough" en un <video>,
+ *     disparamos ese evento a los 200 ms (suficiente para que scripts.js
+ *     termine su init). Así animateIn() corre y el slide aparece.
+ *   - CSS (inline en <head>) muestra la imagen poster de cada slide.
+ *   - Borramos las <source> para que no se descargue nada de video.
+ *   - En desktop: no toca absolutamente nada.
  */
 (function () {
   'use strict';
@@ -17,39 +27,30 @@
 
   if (!mobile) return;
 
-  /* Vaciar fuentes de video para que el browser no descargue nada */
-  document.querySelectorAll(
-    '.home-screen__step-1__bg__video, #home-landing__bg__video'
-  ).forEach(function (v) {
-    v.querySelectorAll('source').forEach(function (s) { s.remove(); });
-    try { v.load(); } catch (e) {} /* Reset a estado vacío */
+  /* ── 1. Interceptar addEventListener (nativo, captura jQuery interno) ────
+     scripts.js llama: video.addEventListener("canplaythrough", handler)
+     Lo interceptamos y despachamos el evento a los 200 ms.
+     Así animateIn() se ejecuta y el contenido de cada slide aparece.      */
+  var _origAdd = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (type, fn, opts) {
+    var self = this;
+    var ret  = _origAdd.apply(this, arguments);
+    if (type === 'canplaythrough' &&
+        self.nodeType === 1 &&
+        self.tagName  === 'VIDEO') {
+      setTimeout(function () {
+        try { self.dispatchEvent(new Event('canplaythrough')); } catch (e) {}
+      }, 200);
+    }
+    return ret;
+  };
+
+  /* ── 2. Vaciar <source> de todos los videos ──────────────────────────────
+     Así el browser no descarga nada. Los <video> quedan en DOM
+     (scripts.js necesita encontrarlos para su lógica interna).            */
+  document.querySelectorAll('video source').forEach(function (s) { s.remove(); });
+  document.querySelectorAll('video').forEach(function (v) {
+    try { v.load(); } catch (e) {}
   });
-
-  /* Parche jQuery: disparar canplaythrough inmediatamente.
-     scripts.js espera este evento para animar cada slide.
-     Sin video que cargar, lo forzamos con un timeout mínimo. */
-  function patch() {
-    var jq = window.jQuery || window.$;
-    if (!jq || !jq.fn || !jq.fn.on || jq.fn._cesPatch) return;
-    jq.fn._cesPatch = true;
-    var _on = jq.fn.on;
-    jq.fn.on = function (events) {
-      if (typeof events === 'string' && events.indexOf('canplaythrough') > -1) {
-        var vid = this[0];
-        if (vid && vid.tagName === 'VIDEO') {
-          var ret = _on.apply(this, arguments);
-          var v = vid;
-          setTimeout(function () {
-            try { v.dispatchEvent(new Event('canplaythrough')); } catch (e) {}
-          }, 50);
-          return ret;
-        }
-      }
-      return _on.apply(this, arguments);
-    };
-  }
-
-  patch();
-  setTimeout(patch, 80);  /* Seguro por si jQuery carga un poco tarde */
 
 }());
