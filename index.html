@@ -71,46 +71,56 @@
       .whatsapp-float__tooltip{display:none}
     }
     </style>
-  
-  <!-- ╔══════════════════════════════════════════════════════════════╗
-       ║  CES Mobile Fix — NO BORRAR                                  ║
-       ║  Anula las reglas de main.css que ocultan los videos en móvil ║
-       ╚══════════════════════════════════════════════════════════════╝ -->
-  <style id="ces-mobile-video-fix">
+  <!-- CES Mobile: imágenes estáticas en lugar de videos — NO BORRAR -->
+  <style id="ces-mobile-fix">
     @media screen and (max-width: 1023px) {
 
-      /* main.css tiene visibility:hidden en estos videos (canvas los renderiza
-         en desktop). En móvil los mostramos directo. */
-      .home-screen__step-1__bg__video {
-        visibility: visible !important;
-        display:    block    !important;
-        position:   absolute !important;
-        top:  0 !important; left: 0 !important;
-        width: 100% !important; height: 100% !important;
-        object-fit: cover !important;
-        z-index: 3 !important;
+      /* ── Ocultar canvas y video en cada slide ──────────────────────────── */
+      .home-screen__step-1__bg__canvas,
+      .home-screen__step-1__bg__video,
+      #home-landing__bg__video            { display: none !important; }
+
+      /* ── Imagen de fondo para cada slide ──────────────────────────────── */
+      /* main.css ya tiene: .mobile #home-landing__bg { background-image: url(../img/home-landing.jpg) }
+         Esa regla queda tal cual — la landing muestra su imagen sola. */
+
+      .home-screen__step-1__bg {
+        background-size:     cover          !important;
+        background-position: center center  !important;
+        background-repeat:   no-repeat      !important;
       }
 
-      /* El canvas de desktop queda oculto en móvil */
-      .home-screen__step-1__bg__canvas {
-        display: none !important;
+      /* Slide 1 — Proyectos */
+      #home-screen-1 .home-screen__step-1__bg {
+        background-image: url(assets/img/posters/home-7.jpg) !important;
       }
-
-      /* main.css pone background-image estática en la landing para mobile.
-         La anulamos para que el <video> se vea. */
-      .mobile #home-landing__bg {
-        background-image: none !important;
+      /* Slide 2 — Inversiones */
+      #home-screen-2 .home-screen__step-1__bg {
+        background-image: url(assets/img/posters/home-inversiones.jpg) !important;
       }
-
-      /* Video de landing: visible y cubriendo toda la sección */
-      #home-landing__bg__video {
-        display:    block    !important;
-        visibility: visible  !important;
-        position:   absolute !important;
-        top:  0 !important; left: 0 !important;
-        width: 100% !important; height: 100% !important;
-        object-fit: cover !important;
-        z-index: 1 !important;
+      /* Slide 3 — Obra nueva */
+      #home-screen-3 .home-screen__step-1__bg {
+        background-image: url(assets/img/posters/home-1.jpg) !important;
+      }
+      /* Slide 4 — Diseño y render */
+      #home-screen-4 .home-screen__step-1__bg {
+        background-image: url(assets/img/posters/home-2.jpg) !important;
+      }
+      /* Slide 5 — Refacciones */
+      #home-screen-5 .home-screen__step-1__bg {
+        background-image: url(assets/img/posters/home-3.jpg) !important;
+      }
+      /* Slide 6 — Espacios exteriores */
+      #home-screen-6 .home-screen__step-1__bg {
+        background-image: url(assets/img/posters/home-4.jpg) !important;
+      }
+      /* Slide 7 — Piedra y revestimientos */
+      #home-screen-7 .home-screen__step-1__bg {
+        background-image: url(assets/img/posters/home-5.jpg) !important;
+      }
+      /* Slide 8 — Obradores */
+      #home-screen-8 .home-screen__step-1__bg {
+        background-image: url(assets/img/posters/home-6.jpg) !important;
       }
     }
   </style>
