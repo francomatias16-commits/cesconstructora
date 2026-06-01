@@ -71,7 +71,50 @@
       .whatsapp-float__tooltip{display:none}
     }
     </style>
-  </head>
+  
+  <!-- ╔══════════════════════════════════════════════════════════════╗
+       ║  CES Mobile Fix — NO BORRAR                                  ║
+       ║  Anula las reglas de main.css que ocultan los videos en móvil ║
+       ╚══════════════════════════════════════════════════════════════╝ -->
+  <style id="ces-mobile-video-fix">
+    @media screen and (max-width: 1023px) {
+
+      /* main.css tiene visibility:hidden en estos videos (canvas los renderiza
+         en desktop). En móvil los mostramos directo. */
+      .home-screen__step-1__bg__video {
+        visibility: visible !important;
+        display:    block    !important;
+        position:   absolute !important;
+        top:  0 !important; left: 0 !important;
+        width: 100% !important; height: 100% !important;
+        object-fit: cover !important;
+        z-index: 3 !important;
+      }
+
+      /* El canvas de desktop queda oculto en móvil */
+      .home-screen__step-1__bg__canvas {
+        display: none !important;
+      }
+
+      /* main.css pone background-image estática en la landing para mobile.
+         La anulamos para que el <video> se vea. */
+      .mobile #home-landing__bg {
+        background-image: none !important;
+      }
+
+      /* Video de landing: visible y cubriendo toda la sección */
+      #home-landing__bg__video {
+        display:    block    !important;
+        visibility: visible  !important;
+        position:   absolute !important;
+        top:  0 !important; left: 0 !important;
+        width: 100% !important; height: 100% !important;
+        object-fit: cover !important;
+        z-index: 1 !important;
+      }
+    }
+  </style>
+</head>
   <body class="page-id-home">
 
     <div id="top-bar">
@@ -147,7 +190,7 @@
   <section class="home-screen" id="home-landing">
   <div id="home-landing__bg">
           <video id="home-landing__bg__video" preload="metadata" loop muted playsinline webkit-playsinline>
-        <source src="assets/video/home-landing.mp4" media="(max-width: 768px)" type="video/mp4">
+        <source src="assets/video/mobile/home-landing.mp4" type="video/mp4">
         <source src="assets/video/home-landing.mp4" type="video/mp4">
             </video>
       </div>
@@ -186,7 +229,7 @@
 
   <div class="home-screen__step-1__bg">
           <video class="home-screen__step-1__bg__video" preload="metadata" loop muted playsinline webkit-playsinline>
-        <source src="assets/video/home-7.mp4" media="(max-width: 768px)" type="video/mp4">
+        <source src="assets/video/mobile/home-7.mp4" type="video/mp4">
         <source src="assets/video/home-7.mp4" type="video/mp4">
             </video>
         <canvas class="home-screen__step-1__bg__canvas"></canvas>
@@ -239,7 +282,7 @@
   <section class="home-screen__step home-screen__step-1">
   <div class="home-screen__step-1__bg">
     <video class="home-screen__step-1__bg__video" preload="metadata" loop muted playsinline webkit-playsinline>
-        <source src="assets/video/home-inversiones.mp4" media="(max-width: 768px)" type="video/mp4">
+        <source src="assets/video/mobile/home-inversiones.mp4" type="video/mp4">
         <source src="assets/video/home-inversiones.mp4" type="video/mp4">
           </video>
     <canvas class="home-screen__step-1__bg__canvas"></canvas>
@@ -283,7 +326,7 @@
 
   <div class="home-screen__step-1__bg">
           <video class="home-screen__step-1__bg__video" preload="metadata" loop muted playsinline webkit-playsinline>
-        <source src="assets/video/home-1.mp4" media="(max-width: 768px)" type="video/mp4">
+        <source src="assets/video/mobile/home-1.mp4" type="video/mp4">
         <source src="assets/video/home-1.mp4" type="video/mp4">
             </video>
         <canvas class="home-screen__step-1__bg__canvas"></canvas>
@@ -336,7 +379,7 @@
 
   <div class="home-screen__step-1__bg">
           <video class="home-screen__step-1__bg__video" preload="metadata" loop muted playsinline webkit-playsinline>
-        <source src="assets/video/home-2.mp4" media="(max-width: 768px)" type="video/mp4">
+        <source src="assets/video/mobile/home-2.mp4" type="video/mp4">
         <source src="assets/video/home-2.mp4" type="video/mp4">
             </video>
         <canvas class="home-screen__step-1__bg__canvas"></canvas>
@@ -389,7 +432,7 @@
 
   <div class="home-screen__step-1__bg">
           <video class="home-screen__step-1__bg__video" preload="metadata" loop muted playsinline webkit-playsinline>
-        <source src="assets/video/home-3.mp4" media="(max-width: 768px)" type="video/mp4">
+        <source src="assets/video/mobile/home-3.mp4" type="video/mp4">
         <source src="assets/video/home-3.mp4" type="video/mp4">
             </video>
         <canvas class="home-screen__step-1__bg__canvas"></canvas>
@@ -442,7 +485,7 @@
 
   <div class="home-screen__step-1__bg">
           <video class="home-screen__step-1__bg__video" preload="metadata" loop muted playsinline webkit-playsinline>
-        <source src="assets/video/home-4.mp4" media="(max-width: 768px)" type="video/mp4">
+        <source src="assets/video/mobile/home-4.mp4" type="video/mp4">
         <source src="assets/video/home-4.mp4" type="video/mp4">
             </video>
         <canvas class="home-screen__step-1__bg__canvas"></canvas>
@@ -495,7 +538,7 @@
 
   <div class="home-screen__step-1__bg">
           <video class="home-screen__step-1__bg__video" preload="metadata" loop muted playsinline webkit-playsinline>
-        <source src="assets/video/home-5.mp4" media="(max-width: 768px)" type="video/mp4">
+        <source src="assets/video/mobile/home-5.mp4" type="video/mp4">
         <source src="assets/video/home-5.mp4" type="video/mp4">
             </video>
         <canvas class="home-screen__step-1__bg__canvas"></canvas>
@@ -548,7 +591,7 @@
 
   <div class="home-screen__step-1__bg">
           <video class="home-screen__step-1__bg__video" preload="metadata" loop muted playsinline webkit-playsinline>
-        <source src="assets/video/home-6.mp4" media="(max-width: 768px)" type="video/mp4">
+        <source src="assets/video/mobile/home-6.mp4" type="video/mp4">
         <source src="assets/video/home-6.mp4" type="video/mp4">
             </video>
         <canvas class="home-screen__step-1__bg__canvas"></canvas>
