@@ -837,7 +837,7 @@
         mode: "prod",
         baseUrl: "",
         rootUri: "",
-        isMobile: (window.matchMedia ? window.matchMedia('(max-width:1023px)').matches : false) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent),
+        isMobile: window.app ? window.app.isMobile : false,
         isTablet: window.app ? window.app.isTablet : false
       };
     </script>
