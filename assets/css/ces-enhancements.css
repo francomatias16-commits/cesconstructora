@@ -1,6 +1,5 @@
 /* ============================================================
    CES Construcciones — ces-enhancements.css
-   Hover/scroll effects, nav contrast, footer compact
    ============================================================ */
 
 /* ── 1. NAV LINKS: dark text on light-background pages ──────── */
@@ -45,7 +44,6 @@
   border-radius: 2px;
   cursor: default;
 }
-/* Pseudo-element: the horizontal red fill that slides in from left */
 .srv-card::before {
   content: '';
   position: absolute;
@@ -56,52 +54,36 @@
   transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 0;
 }
-/* All child elements sit above the pseudo */
 .srv-card > * {
   position: relative;
   z-index: 1;
 }
-/* Trigger: expand red background fully across the row */
 .srv-card:hover::before {
   transform: scaleX(1);
 }
-/* Text colour changes on hover */
 .srv-card:hover .srv-card__tag,
 .srv-card:hover .srv-card__tag::before {
   color: rgba(255,255,255,0.75) !important;
   background: rgba(255,255,255,0.5) !important;
 }
-.srv-card:hover .srv-card__name {
-  color: #fff !important;
-}
-.srv-card:hover .srv-card__desc {
-  color: rgba(255,255,255,0.8) !important;
-}
+.srv-card:hover .srv-card__name  { color: #fff !important; }
+.srv-card:hover .srv-card__desc  { color: rgba(255,255,255,0.8) !important; }
 .srv-card:hover .srv-card__list li {
   color: rgba(255,255,255,0.75) !important;
   border-bottom-color: rgba(255,255,255,0.15) !important;
 }
-.srv-card:hover .srv-card__list li::before {
-  background: rgba(255,255,255,0.7) !important;
-}
-.srv-card:hover .srv-card__list {
-  border-top-color: rgba(255,255,255,0.2) !important;
-}
-.srv-card:hover {
-  border-top-color: #d62323 !important;
-}
+.srv-card:hover .srv-card__list li::before { background: rgba(255,255,255,0.7) !important; }
+.srv-card:hover .srv-card__list  { border-top-color: rgba(255,255,255,0.2) !important; }
+.srv-card:hover                  { border-top-color: #d62323 !important; }
 
-/* Scroll-in highlight: card enters viewport → brief red pulse */
-.srv-card.ces-scroll-in {
-  animation: ces-card-pulse 0.6s ease forwards;
-}
+.srv-card.ces-scroll-in { animation: ces-card-pulse 0.6s ease forwards; }
 @keyframes ces-card-pulse {
   0%   { box-shadow: 0 0 0 0 rgba(214,35,35,0); }
   40%  { box-shadow: 0 0 0 6px rgba(214,35,35,0.18); }
   100% { box-shadow: 0 0 0 0 rgba(214,35,35,0); }
 }
 
-/* ── 3. INVERSIONES VENTAJAS (01-04) HOVER + SCROLL EFFECT ──── */
+/* ── 3. INVERSIONES VENTAJAS HOVER ──────────────────────────── */
 .inv-ventaja {
   transition: background-color 0.35s ease, transform 0.3s ease, box-shadow 0.35s ease;
   border-radius: 2px;
@@ -119,74 +101,86 @@
   z-index: 0;
   border-radius: 2px;
 }
-.inv-ventaja > * {
-  position: relative;
-  z-index: 1;
-}
-.inv-ventaja:hover::before {
-  transform: scaleY(1);
-}
-.inv-ventaja:hover .inv-ventaja__num {
-  color: rgba(255,255,255,0.25) !important;
-}
-.inv-ventaja:hover .inv-ventaja__title {
-  color: #fff !important;
-}
-.inv-ventaja:hover .inv-ventaja__body {
-  color: rgba(255,255,255,0.75) !important;
-}
+.inv-ventaja > * { position: relative; z-index: 1; }
+.inv-ventaja:hover::before { transform: scaleY(1); }
+.inv-ventaja:hover .inv-ventaja__num   { color: rgba(255,255,255,0.25) !important; }
+.inv-ventaja:hover .inv-ventaja__title { color: #fff !important; }
+.inv-ventaja:hover .inv-ventaja__body  { color: rgba(255,255,255,0.75) !important; }
 .inv-ventaja:hover {
   box-shadow: 0 8px 32px rgba(214,35,35,0.25);
   transform: translateY(-4px);
   border-color: transparent !important;
 }
 .inv-ventaja:hover + .inv-ventaja,
-.inv-ventaja:hover {
-  border-left-color: transparent !important;
-}
+.inv-ventaja:hover { border-left-color: transparent !important; }
 
-/* Scroll-in effect for ventajas */
-.inv-ventaja.ces-scroll-in {
-  animation: ces-ventaja-in 0.55s ease forwards;
-}
+.inv-ventaja.ces-scroll-in { animation: ces-ventaja-in 0.55s ease forwards; }
 @keyframes ces-ventaja-in {
   0%   { opacity: 0.6; transform: translateY(16px); }
   100% { opacity: 1;   transform: translateY(0); }
 }
 
-/* ── 4. FOOTER COMPACT (50% compressed) ─────────────────────── */
+/* ── 4. FOOTER — ULTRA COMPACT (all pages, all breakpoints) ──── */
+/* Kill the enormous original padding/margin from main.css        */
 #footer {
-  background: #101010;
+  background: #101010 !important;
+  padding: 0 !important;          /* was 60px/70px/120px */
 }
 #footer__inner {
-  padding: 18px 6% 0 !important;
+  position: relative !important;
   display: flex !important;
+  flex-direction: column !important;
   flex-wrap: wrap !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  margin: 0 !important;
+  padding: 14px 5% 0 !important;
   gap: 0 !important;
 }
-#footer__logo {
-  width: 36px !important;
-  height: 40px !important;
-  margin-right: auto !important;
-  margin-bottom: 10px !important;
-  flex-basis: 100% !important;
+/* Remove the absolutely-positioned horizontal line at 97px */
+#footer__inner::after {
+  display: none !important;
 }
+
+/* Logo */
+#footer__logo {
+  width: 32px !important;
+  height: 35px !important;
+  margin: 0 0 10px 0 !important;
+  flex-basis: auto !important;
+  flex-shrink: 0 !important;
+}
+
+/* Nav columns */
 #footer__pages {
   display: flex !important;
   flex-wrap: wrap !important;
-  gap: 0 20px !important;
-  flex: 1 !important;
-  margin-bottom: 10px !important;
+  width: 100% !important;
+  gap: 0 18px !important;
+  padding: 0 0 6px 0 !important;
+  margin: 0 0 8px 0 !important;
+  border-top: 1px solid #272727 !important;
+  border-bottom: 1px solid #272727 !important;
+  justify-content: flex-start !important;
 }
 .footer__page {
   height: auto !important;
   min-height: 0 !important;
+  flex-basis: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 .footer__page__title {
-  font-size: 9px !important;
-  letter-spacing: 0.12em !important;
-  padding-bottom: 5px !important;
   display: block !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 8px 0 4px 0 !important;   /* was 135px bottom */
+  font-size: 8px !important;
+  letter-spacing: 0.14em !important;
+  line-height: 1em !important;
+  color: #c4c4c4 !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
 }
 .footer__page__sections {
   display: block !important;
@@ -195,121 +189,151 @@
   margin-bottom: 2px !important;
 }
 .footer__page__section__title {
-  font-size: 10px !important;
-  line-height: 1.4em !important;
-}
-#footer__contact {
-  font-size: 10px !important;
+  display: inline-block !important;
+  margin-bottom: 0 !important;      /* was 10px */
+  font-size: 9px !important;
   line-height: 1.5em !important;
-  color: rgba(255,255,255,0.45) !important;
-  margin-bottom: 8px !important;
-  flex-basis: 100% !important;
-  margin-top: 0 !important;
+  color: #868686 !important;
 }
+
+/* Contact info */
+#footer__contact {
+  margin: 0 0 6px 0 !important;    /* was margin-top:70px */
+  font-size: 9px !important;
+  line-height: 1.5em !important;
+  color: rgba(255,255,255,0.4) !important;
+  font-weight: 400 !important;
+}
+#footer__contact strong {
+  display: inline !important;
+  padding-bottom: 0 !important;    /* was 20px */
+  font-weight: 600 !important;
+  color: rgba(255,255,255,0.65) !important;
+}
+
+/* Social */
 #footer__social {
   flex-basis: 100% !important;
   text-align: left !important;
-  padding: 4px 0 !important;
-  border-top: 1px solid rgba(255,255,255,0.08) !important;
-  margin-top: 2px !important;
+  padding: 4px 0 2px !important;
+  border-top: 1px solid rgba(255,255,255,0.07) !important;
+  margin-top: 0 !important;
 }
 #footer__social a {
-  font-size: 11px !important;
+  font-size: 10px !important;
+  color: #c8a96e !important;
 }
+
+/* Bottom bar */
 #footer__bottom {
-  flex-basis: 100% !important;
   display: flex !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
   align-items: center !important;
   justify-content: space-between !important;
-  flex-wrap: wrap !important;
   gap: 4px !important;
-  padding: 6px 0 8px !important;
-  margin-top: 4px !important;
-  border-top: 1px solid rgba(255,255,255,0.08) !important;
+  padding: 5px 0 7px !important;
+  margin: 2px 0 0 0 !important;    /* was margin-top:135px */
+  border-top: 1px solid rgba(255,255,255,0.07) !important;
 }
 #footer__copyright {
-  font-size: 9px !important;
+  font-size: 8px !important;
   color: rgba(255,255,255,0.3) !important;
+  margin: 0 !important;
 }
 #footer__terms {
-  font-size: 9px !important;
+  font-size: 8px !important;
   color: rgba(255,255,255,0.35) !important;
 }
 #footer__credits {
-  font-size: 9px !important;
-  color: rgba(255,255,255,0.3) !important;
+  font-size: 8px !important;
+  line-height: 1.2em !important;
+  color: rgba(255,255,255,0.28) !important;
+  margin-left: 0 !important;
 }
-#footer__credits__link {
-  color: rgba(255,255,255,0.45) !important;
-}
+#footer__credits__txt  { color: rgba(255,255,255,0.28) !important; }
+#footer__credits__link { color: rgba(255,255,255,0.42) !important; }
 
+/* ── Desktop: side-by-side layout ────────────────────────────── */
 @media screen and (min-width: 1024px) {
   #footer__inner {
-    padding: 18px 6% 0 !important;
     display: grid !important;
-    grid-template-columns: 48px 1fr auto !important;
+    grid-template-columns: 40px 1fr auto !important;
     grid-template-rows: auto auto auto !important;
-    column-gap: 36px !important;
+    column-gap: 28px !important;
     row-gap: 0 !important;
+    padding: 14px 5% 0 !important;
     align-items: start !important;
   }
   #footer__logo {
     grid-column: 1;
-    grid-row: 1;
-    flex-basis: auto !important;
+    grid-row: 1 / 3;
     margin-bottom: 0 !important;
-    margin-right: 0 !important;
+    align-self: start;
   }
   #footer__pages {
     grid-column: 2;
-    grid-row: 1 / 3;
-    margin-bottom: 0 !important;
-    align-items: start !important;
+    grid-row: 1;
     flex-wrap: nowrap !important;
-    gap: 0 24px !important;
+    gap: 0 20px !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: auto !important;
+    justify-content: flex-start !important;
+  }
+  .footer__page__title {
+    margin-bottom: 4px !important;
   }
   #footer__contact {
     grid-column: 3;
     grid-row: 1;
-    flex-basis: auto !important;
     text-align: right !important;
     margin-bottom: 0 !important;
   }
   #footer__social {
     grid-column: 3;
     grid-row: 2;
-    flex-basis: auto !important;
     text-align: right !important;
     border-top: none !important;
-    padding: 6px 0 0 !important;
-    margin-top: 0 !important;
+    padding: 4px 0 0 !important;
+    flex-basis: auto !important;
   }
   #footer__bottom {
     grid-column: 1 / -1;
     grid-row: 3;
-    padding: 6px 0 8px !important;
-    margin-top: 6px !important;
+    padding: 5px 0 7px !important;
+    margin-top: 4px !important;
   }
 }
 
-/* ── 5. HOME LANDING: fallback bg when video doesn't play ─────── */
-#home-landing__bg {
-  background-image: url('../img/home-landing.jpg') !important;
-  background-size: cover !important;
-  background-position: center center !important;
-}
-
-/* ── 6. General responsive tweaks ───────────────────────────── */
-@media screen and (max-width: 768px) {
-  .srv-card:hover::before {
-    transform: scaleX(1);
+/* ── Mobile: stack cleanly ────────────────────────────────────── */
+@media screen and (max-width: 767px) {
+  #footer__inner {
+    padding: 12px 5% 0 !important;
   }
-  .inv-ventaja:hover {
-    transform: none;
+  #footer__pages {
+    gap: 0 12px !important;
+  }
+  .footer__page__title {
+    font-size: 7px !important;
+  }
+  .footer__page__section__title {
+    font-size: 8px !important;
   }
   #footer__bottom {
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 2px !important;
   }
+  .srv-card:hover::before { transform: scaleX(1); }
+  .inv-ventaja:hover { transform: none; }
+}
+
+/* ── 5. HOME LANDING: fallback bg ──────────────────────────── */
+#home-landing__bg {
+  background-image: url('../img/home-landing.jpg') !important;
+  background-size: cover !important;
+  background-position: center center !important;
 }
