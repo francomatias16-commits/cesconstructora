@@ -37,17 +37,35 @@
   }
 }
 
-/* ── 2. SERVICES (srv-card) HOVER + SCROLL EFFECT ───────────── */
+/* ── 2. SERVICES (srv-card) HOVER: horizontal red fill sweep ── */
 .srv-card {
-  transition: background-color 0.35s ease, transform 0.3s ease, box-shadow 0.35s ease;
+  position: relative;
+  overflow: hidden;
+  transition: color 0.35s ease;
   border-radius: 2px;
   cursor: default;
 }
-.srv-card:hover {
-  background-color: #d62323;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(214, 35, 35, 0.22);
+/* Pseudo-element: the horizontal red fill that slides in from left */
+.srv-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #d62323;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 0;
 }
+/* All child elements sit above the pseudo */
+.srv-card > * {
+  position: relative;
+  z-index: 1;
+}
+/* Trigger: expand red background fully across the row */
+.srv-card:hover::before {
+  transform: scaleX(1);
+}
+/* Text colour changes on hover */
 .srv-card:hover .srv-card__tag,
 .srv-card:hover .srv-card__tag::before {
   color: rgba(255,255,255,0.75) !important;
@@ -79,8 +97,8 @@
 }
 @keyframes ces-card-pulse {
   0%   { box-shadow: 0 0 0 0 rgba(214,35,35,0); }
-  40%  { box-shadow: 0 0 0 6px rgba(214,35,35,0.18); background-color: rgba(214,35,35,0.06); }
-  100% { box-shadow: 0 0 0 0 rgba(214,35,35,0); background-color: transparent; }
+  40%  { box-shadow: 0 0 0 6px rgba(214,35,35,0.18); }
+  100% { box-shadow: 0 0 0 0 rgba(214,35,35,0); }
 }
 
 /* ── 3. INVERSIONES VENTAJAS (01-04) HOVER + SCROLL EFFECT ──── */
@@ -122,7 +140,6 @@
   transform: translateY(-4px);
   border-color: transparent !important;
 }
-/* Separator lines go transparent on hover so red fills cleanly */
 .inv-ventaja:hover + .inv-ventaja,
 .inv-ventaja:hover {
   border-left-color: transparent !important;
@@ -137,67 +154,67 @@
   100% { opacity: 1;   transform: translateY(0); }
 }
 
-/* ── 4. FOOTER COMPACT ───────────────────────────────────────── */
+/* ── 4. FOOTER COMPACT (50% compressed) ─────────────────────── */
 #footer {
   background: #101010;
 }
 #footer__inner {
-  padding: 40px 6% 0 !important;
+  padding: 18px 6% 0 !important;
   display: flex !important;
   flex-wrap: wrap !important;
   gap: 0 !important;
 }
 #footer__logo {
-  width: 48px !important;
-  height: 52px !important;
+  width: 36px !important;
+  height: 40px !important;
   margin-right: auto !important;
-  margin-bottom: 20px !important;
+  margin-bottom: 10px !important;
   flex-basis: 100% !important;
 }
 #footer__pages {
   display: flex !important;
   flex-wrap: wrap !important;
-  gap: 0 32px !important;
+  gap: 0 20px !important;
   flex: 1 !important;
-  margin-bottom: 24px !important;
+  margin-bottom: 10px !important;
 }
 .footer__page {
   height: auto !important;
   min-height: 0 !important;
 }
 .footer__page__title {
-  font-size: 10px !important;
-  letter-spacing: 0.15em !important;
-  padding-bottom: 10px !important;
+  font-size: 9px !important;
+  letter-spacing: 0.12em !important;
+  padding-bottom: 5px !important;
   display: block !important;
 }
 .footer__page__sections {
   display: block !important;
 }
 .footer__page__section {
-  margin-bottom: 4px !important;
+  margin-bottom: 2px !important;
 }
 .footer__page__section__title {
-  font-size: 11px !important;
-  line-height: 1.5em !important;
+  font-size: 10px !important;
+  line-height: 1.4em !important;
 }
 #footer__contact {
-  font-size: 11px !important;
-  line-height: 1.65em !important;
+  font-size: 10px !important;
+  line-height: 1.5em !important;
   color: rgba(255,255,255,0.45) !important;
-  margin-bottom: 20px !important;
+  margin-bottom: 8px !important;
   flex-basis: 100% !important;
   margin-top: 0 !important;
 }
 #footer__social {
   flex-basis: 100% !important;
   text-align: left !important;
-  padding: 8px 0 !important;
+  padding: 4px 0 !important;
   border-top: 1px solid rgba(255,255,255,0.08) !important;
-  margin-top: 4px !important;
+  margin-top: 2px !important;
 }
 #footer__social a {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 #footer__bottom {
   flex-basis: 100% !important;
@@ -205,21 +222,21 @@
   align-items: center !important;
   justify-content: space-between !important;
   flex-wrap: wrap !important;
-  gap: 8px !important;
-  padding: 12px 0 16px !important;
-  margin-top: 8px !important;
+  gap: 4px !important;
+  padding: 6px 0 8px !important;
+  margin-top: 4px !important;
   border-top: 1px solid rgba(255,255,255,0.08) !important;
 }
 #footer__copyright {
-  font-size: 10px !important;
+  font-size: 9px !important;
   color: rgba(255,255,255,0.3) !important;
 }
 #footer__terms {
-  font-size: 10px !important;
+  font-size: 9px !important;
   color: rgba(255,255,255,0.35) !important;
 }
 #footer__credits {
-  font-size: 10px !important;
+  font-size: 9px !important;
   color: rgba(255,255,255,0.3) !important;
 }
 #footer__credits__link {
@@ -228,11 +245,11 @@
 
 @media screen and (min-width: 1024px) {
   #footer__inner {
-    padding: 36px 6% 0 !important;
+    padding: 18px 6% 0 !important;
     display: grid !important;
-    grid-template-columns: 60px 1fr auto !important;
-    grid-template-rows: auto auto auto auto !important;
-    column-gap: 48px !important;
+    grid-template-columns: 48px 1fr auto !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 36px !important;
     row-gap: 0 !important;
     align-items: start !important;
   }
@@ -249,7 +266,7 @@
     margin-bottom: 0 !important;
     align-items: start !important;
     flex-wrap: nowrap !important;
-    gap: 0 32px !important;
+    gap: 0 24px !important;
   }
   #footer__contact {
     grid-column: 3;
@@ -264,14 +281,14 @@
     flex-basis: auto !important;
     text-align: right !important;
     border-top: none !important;
-    padding: 12px 0 0 !important;
+    padding: 6px 0 0 !important;
     margin-top: 0 !important;
   }
   #footer__bottom {
     grid-column: 1 / -1;
     grid-row: 3;
-    padding: 12px 0 16px !important;
-    margin-top: 12px !important;
+    padding: 6px 0 8px !important;
+    margin-top: 6px !important;
   }
 }
 
@@ -284,8 +301,8 @@
 
 /* ── 6. General responsive tweaks ───────────────────────────── */
 @media screen and (max-width: 768px) {
-  .srv-card:hover {
-    transform: none;
+  .srv-card:hover::before {
+    transform: scaleX(1);
   }
   .inv-ventaja:hover {
     transform: none;
@@ -293,6 +310,6 @@
   #footer__bottom {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 4px !important;
+    gap: 2px !important;
   }
 }
