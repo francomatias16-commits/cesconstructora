@@ -1,24 +1,10 @@
 /**
- * CES — Mobile Video Optimizer v6.0
- *
- * Problema raíz:
- * En iOS/Android, el browser no puede bufferear 9 videos simultaneamente.
- * El último slide (home-6.mp4) se congela porque:
- *   1. El browser agotó los recursos de video
- *   2. 'canplaythrough' nunca se dispara sin gesto del usuario
- *   3. El canvas de transición intenta hacer drawImage() a 60fps
- *
- * Esta solución:
- *   - En móvil: reemplaza completamente los videos por sus posters (imagen estática)
- *     EXCEPTO el video de la diapositiva activa
- *   - Intercepta canvas drawImage para evitar el loop de 60fps
- *   - Maneja la transición entre slides activando/desactivando videos on-demand
- *   - Garantiza que canplaythrough siempre se despache (fallback 800ms)
+ * CES — Mobile Video Optimizer v6.1
+ * Fix: cuando no hay source mobile, usa desktop src como fallback
  */
 (function () {
   'use strict';
 
-  // Detectar móvil por ancho O user-agent
   var isMobile =
     window.matchMedia('(max-width: 1023px)').matches ||
     /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -67,33 +53,29 @@
     '}';
   (document.head || document.documentElement).appendChild(style);
 
-  /* ─── 3. Gestión de videos: solo uno activo a la vez ───────────────────── */
-  var activeVideo   = null;
-  var videoDataMap  = [];   // [{video, mobileSrc, desktopSrc, loaded}]
-  var initialized   = false;
+  /* ─── 3. Gestión de videos ─────────────────────────────────────────────── */
+  var activeVideo  = null;
+  var videoDataMap = [];
+  var initialized  = false;
 
+  // FIX v6.1: si no hay source mobile, usa desktop (o data guardada en _cesDesktop)
   function getMobileSrc(video) {
+    // Primero intentar desde atributo guardado
+    if (video._cesMobile) return video._cesMobile;
+    if (video._cesDesktop) return video._cesDesktop;
+    // Fallback: src directo del elemento
+    if (video.src) return video.src;
     var sources = video.querySelectorAll('source');
-    for (var i = 0; i < sources.length; i++) {
-      var media = sources[i].getAttribute('media') || '';
-      if (media.indexOf('max-width') > -1) {
-        return sources[i].getAttribute('src');
-      }
-    }
-    return sources[0] ? sources[0].getAttribute('src') : null;
+    if (sources.length > 0) return sources[0].getAttribute('src');
+    return null;
   }
 
   function getDesktopSrc(video) {
+    if (video._cesDesktop) return video._cesDesktop;
+    if (video.src) return video.src;
     var sources = video.querySelectorAll('source');
-    for (var i = sources.length - 1; i >= 0; i--) {
-      var media = sources[i].getAttribute('media') || '';
-      if (media.indexOf('max-width') === -1) {
-        return sources[i].getAttribute('src');
-      }
-    }
-    return sources[sources.length - 1]
-      ? sources[sources.length - 1].getAttribute('src')
-      : null;
+    if (sources.length > 0) return sources[sources.length - 1].getAttribute('src');
+    return null;
   }
 
   function deactivateVideo(video) {
@@ -119,11 +101,9 @@
     video.preload = 'auto';
     video._cesActive = true;
 
-    // Obtener src móvil
-    var src = getMobileSrc(video) || getDesktopSrc(video);
+    var src = getMobileSrc(video);
     if (!src) return;
 
-    // Solo recargar si el src cambió
     if (video.currentSrc && video.currentSrc.indexOf(src) > -1 && video.readyState >= 2) {
       tryPlay(video);
       return;
@@ -131,16 +111,12 @@
 
     video.src = src;
     video.load();
-
     tryPlay(video);
 
-    // Fallback: si canplaythrough no llega en 800ms, despacharlo manualmente
     var fallbackId = setTimeout(function () {
       if (video._cesActive) {
         tryPlay(video);
-        try {
-          video.dispatchEvent(new Event('canplaythrough'));
-        } catch (e) {}
+        try { video.dispatchEvent(new Event('canplaythrough')); } catch (e) {}
       }
     }, 800);
 
@@ -157,19 +133,31 @@
     if (p && p.catch) { p.catch(function () {}); }
   }
 
-  /* ─── 4. Congelar todos los videos al inicio (sin src) ─────────────────── */
+  /* ─── 4. Congelar todos los videos al inicio ────────────────────────────── */
   function freezeAllVideos() {
     var videos = document.querySelectorAll(
       '.home-screen__step-1__bg__video, #home-landing__bg__video'
     );
     for (var i = 0; i < videos.length; i++) {
       var v = videos[i];
-      v._cesMobile  = getMobileSrc(v);
-      v._cesDesktop = getDesktopSrc(v);
+      // Guardar srcs ANTES de borrar los source hijos
+      var sources = v.querySelectorAll('source');
+      // Buscar mobile src
+      var mobileSrc = null, desktopSrc = null;
+      for (var s = 0; s < sources.length; s++) {
+        var media = sources[s].getAttribute('media') || '';
+        if (media.indexOf('max-width') > -1) {
+          mobileSrc = sources[s].getAttribute('src');
+        } else {
+          desktopSrc = sources[s].getAttribute('src');
+        }
+      }
+      // Si no hay mobile, usar desktop
+      v._cesMobile  = mobileSrc || desktopSrc || v.src || null;
+      v._cesDesktop = desktopSrc || mobileSrc || v.src || null;
+
       v.removeAttribute('src');
       v.preload = 'none';
-      // Eliminar <source> hijos para que el browser no auto-cargue
-      var sources = v.querySelectorAll('source');
       for (var j = 0; j < sources.length; j++) {
         sources[j].parentNode.removeChild(sources[j]);
       }
@@ -178,7 +166,7 @@
     }
   }
 
-  /* ─── 5. Detectar cambio de slide activo con MutationObserver ──────────── */
+  /* ─── 5. Detectar cambio de slide activo ────────────────────────────────── */
   function watchSlides() {
     if (!window.MutationObserver) return;
 
@@ -187,11 +175,8 @@
         var mut = mutations[m];
         if (mut.attributeName !== 'style') continue;
         var el = mut.target;
-
-        // El slide se muestra cuando visibility = 'inherit' o ''
         var vis = el.style.visibility;
         if (vis === 'inherit' || vis === '') {
-          // Buscar video dentro de este elemento
           var video =
             el.querySelector('.home-screen__step-1__bg__video') ||
             el.querySelector('#home-landing__bg__video');
@@ -203,7 +188,6 @@
       }
     });
 
-    // Observar todos los contenedores de slide
     var targets = document.querySelectorAll(
       '.home-screen, .home-screen__step, #home-landing, #home-landing__bg'
     );
@@ -216,7 +200,7 @@
     }
   }
 
-  /* ─── 6. Interceptar canplaythrough de jQuery (para scripts.js) ─────────── */
+  /* ─── 6. Patch jQuery canplaythrough ────────────────────────────────────── */
   function patchjQuery() {
     if (!window.jQuery && !window.$) {
       setTimeout(patchjQuery, 100);
@@ -231,32 +215,22 @@
         var vidEl = this[0];
         if (vidEl && vidEl.tagName === 'VIDEO' && !vidEl._cesPatchedCpt) {
           vidEl._cesPatchedCpt = true;
-
-          // Registrar el listener real
           var result = _originalOn.apply(this, arguments);
-
-          // Preparar para móvil
           vidEl.muted = true;
           vidEl.setAttribute('muted', '');
           vidEl.setAttribute('playsinline', '');
           vidEl.setAttribute('webkit-playsinline', '');
-
-          // Fallback garantizado para scripts.js
           var fired = false;
           vidEl.addEventListener('canplaythrough', function onRealCpt() {
             fired = true;
             vidEl.removeEventListener('canplaythrough', onRealCpt);
           });
-
           setTimeout(function () {
             if (!fired && vidEl._cesActive !== false) {
               fired = true;
-              try {
-                vidEl.dispatchEvent(new Event('canplaythrough'));
-              } catch (e) {}
+              try { vidEl.dispatchEvent(new Event('canplaythrough')); } catch (e) {}
             }
           }, 1200);
-
           return result;
         }
       }
@@ -268,16 +242,11 @@
   function init() {
     if (initialized) return;
     initialized = true;
-
     freezeAllVideos();
     watchSlides();
     patchjQuery();
-
-    // Activar el video landing inmediatamente
     var landing = document.getElementById('home-landing__bg__video');
-    if (landing) {
-      activateVideo(landing);
-    }
+    if (landing) activateVideo(landing);
   }
 
   if (document.readyState === 'loading') {
