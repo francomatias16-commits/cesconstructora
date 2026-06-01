@@ -1,16 +1,20 @@
 /**
- * CES Construcciones — Mobile Video Optimizer v9.0
+ * CES Construcciones — Mobile Video Optimizer v10.0
  *
- * ESTRATEGIA DEFINITIVA:
- *   En móvil, redirige cada video a su versión comprimida en assets/video/mobile/.
- *   - home-3 (4K 20MB) → 468 KB  ↓97%
- *   - home-5 (4K 22MB) → 1.2 MB  ↓94%
- *   - home-6 (4K 27MB) → 2.2 MB  ↓91%
- *   Total: 102 MB → 9.8 MB
+ * PROBLEMAS RESUELTOS:
  *
- *   Carga progresiva: solo el video activo se carga a la vez.
- *   canplaythrough se dispara con timeout adaptativo para que scripts.js
- *   no congele la timeline.
+ * 1. `.home-screen__step-1__bg__video { visibility: hidden }` en main.css →
+ *    Los videos del home estaban ocultos por defecto (canvas los renderiza
+ *    en desktop). En móvil hay que hacerlos visibles y ocultar el canvas.
+ *
+ * 2. `.mobile #home-landing__bg { background-image: url(../img/home-landing.jpg) }`
+ *    en main.css → La landing en móvil usa imagen estática, tapando el video.
+ *    Lo anulamos para que el video se vea.
+ *
+ * 3. v9 no reinyectaba el CSS de visibilidad → slides en blanco.
+ *
+ * 4. Videos originales 4K (hasta 27 MB) → versiones comprimidas en
+ *    assets/video/mobile/ (total 9.8 MB → carga fluida en 4G).
  */
 (function () {
   'use strict';
@@ -21,30 +25,49 @@
 
   if (!isMobile) return;
 
-  // ── 1. Redirigir fuentes a versiones mobile comprimidas ────────────────────
-  // El DOM ya está parseado (este script está al final del body).
+  /* ── 1. CSS: corregir visibilidad de videos en móvil ─────────────────────
+     main.css tiene visibility:hidden en los videos (canvas los renderiza en
+     desktop). Aquí los hacemos visibles y ocultamos el canvas.
+     También anulamos el background-image estático de la landing.         */
+  var style = document.createElement('style');
+  style.textContent = [
+
+    /* Videos de home-screen paso 1: hacerlos visibles */
+    '.home-screen__step-1__bg__video {',
+    '  visibility: visible !important;',
+    '  display:    block    !important;',
+    '  position:   absolute !important;',
+    '  top:  0 !important; left: 0 !important;',
+    '  width: 100% !important; height: 100% !important;',
+    '  object-fit: cover !important;',
+    '  z-index: 3 !important;',
+    '}',
+
+    /* Canvas: ocultarlo (mostramos el <video> directamente) */
+    '.home-screen__step-1__bg__canvas { display: none !important; }',
+
+    /* Landing: anular imagen estática para que se vea el video */
+    '.mobile #home-landing__bg {',
+    '  background-image: none !important;',
+    '}',
+    '#home-landing__bg__video {',
+    '  display:    block    !important;',
+    '  visibility: visible  !important;',
+    '  position:   absolute !important;',
+    '  top:  0 !important; left: 0 !important;',
+    '  width: 100% !important; height: 100% !important;',
+    '  object-fit: cover !important;',
+    '  z-index: 1 !important;',
+    '}',
+
+  ].join('\n');
+  (document.head || document.documentElement).appendChild(style);
+
+  /* ── 2. Redirigir fuentes a versiones mobile (9.8 MB total) ─────────────
+     Los originales son 4K y pesan 102 MB. Las versiones comprimidas
+     tienen misma calidad visual pero a 720–1280px: carga fluida en 4G.  */
   var MOBILE_DIR = 'assets/video/mobile/';
 
-  function rewriteSources(video) {
-    var sources = video.querySelectorAll('source');
-    sources.forEach(function (src) {
-      var s = src.getAttribute('src') || '';
-      if (s && s.indexOf('/mobile/') === -1) {
-        // Reemplazar ruta: assets/video/X.mp4 → assets/video/mobile/X.mp4
-        var filename = s.split('/').pop();
-        src.setAttribute('src', MOBILE_DIR + filename);
-      }
-      // Eliminar media query de <source> para que el browser use el primero
-      src.removeAttribute('media');
-    });
-  }
-
-  // Aplicar a todos los videos del home
-  var allVideos = document.querySelectorAll(
-    '#home-landing__bg__video, .home-screen__step-1__bg__video'
-  );
-
-  // Mapa poster para mostrar imagen mientras carga el video
   var POSTER_MAP = {
     'home-landing.mp4'    : 'assets/img/posters/home-landing.jpg',
     'home-7.mp4'          : 'assets/img/posters/home-7.jpg',
@@ -58,48 +81,71 @@
   };
 
   function getFilename(video) {
+    /* Busca el src original (antes de reescribir) */
     var sources = video.querySelectorAll('source');
     for (var i = 0; i < sources.length; i++) {
       var s = sources[i].getAttribute('src') || '';
-      if (s) return s.split('/').pop();
+      if (s) return s.split('/').pop().replace('mobile/', '').split('/').pop();
     }
-    return '';
+    var vs = video.getAttribute('src') || '';
+    return vs.split('/').pop();
   }
 
-  allVideos.forEach(function (v, idx) {
-    // Redirigir fuentes a versiones comprimidas
-    rewriteSources(v);
+  function rewriteAndPrepare(video, isFirst) {
+    var fname = getFilename(video);
 
-    // Asignar poster para mostrar imagen mientras carga
-    var fname = getFilename(v);
+    /* Poster: imagen visible mientras el video carga */
     if (POSTER_MAP[fname]) {
-      v.setAttribute('poster', POSTER_MAP[fname]);
+      video.setAttribute('poster', POSTER_MAP[fname]);
     }
 
-    // Configurar atributos base
-    v.muted    = true;
-    v.loop     = true;
-    v.setAttribute('muted', '');
-    v.setAttribute('playsinline', '');
-    v.setAttribute('webkit-playsinline', '');
-    v.setAttribute('x5-playsinline', '');
+    /* Reescribir <source> a versión comprimida */
+    var sources = video.querySelectorAll('source');
+    sources.forEach(function (src) {
+      var s = src.getAttribute('src') || '';
+      if (s && s.indexOf('/mobile/') === -1) {
+        var file = s.split('/').pop();
+        src.setAttribute('src', MOBILE_DIR + file);
+      }
+      /* Quitar media queries de <source> para que el browser use el primero */
+      src.removeAttribute('media');
+    });
 
-    if (idx === 0) {
-      // Landing: cargar inmediatamente
-      v.preload = 'auto';
-      v.load();
-      var p; try { p = v.play(); } catch(e) {}
-      if (p && p.catch) p.catch(function () {
-        setTimeout(function () { try { v.play(); } catch(e) {} }, 500);
-      });
-    } else {
-      // Resto: preload="none" → solo cargan cuando su slide se activa
-      v.preload = 'none';
-      v.load(); // reset para cancelar cualquier carga iniciada antes
+    /* Atributos de reproducción */
+    video.muted    = true;
+    video.loop     = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.setAttribute('x5-playsinline', '');
+
+    /* Todos con preload="auto": 9.8 MB total se descarga rápido en 4G */
+    video.preload = 'auto';
+    video.load();
+
+    if (isFirst) {
+      /* Primer video (landing): arrancar ya */
+      _tryPlay(video);
     }
-  });
+  }
 
-  // ── 2. Canvas no-op (scripts.js sigue llamando drawImage en móvil) ─────────
+  function _tryPlay(v) {
+    var p; try { p = v.play(); } catch (e) {}
+    if (p && p.catch) p.catch(function () {
+      setTimeout(function () { try { v.play(); } catch (e) {} }, 400);
+    });
+  }
+
+  /* Aplicar a landing + todos los step-1 */
+  var landing = document.getElementById('home-landing__bg__video');
+  if (landing) rewriteAndPrepare(landing, true);
+
+  var stepVideos = document.querySelectorAll('.home-screen__step-1__bg__video');
+  stepVideos.forEach(function (v) { rewriteAndPrepare(v, false); });
+
+  /* ── 3. Canvas no-op (scripts.js sigue llamando drawImage) ──────────────
+     Sin esto, scripts.js puede lanzar errores con canvas de dimensión 0
+     que frezan el ticker de animación.                                    */
   var _origGetContext = HTMLCanvasElement.prototype.getContext;
   HTMLCanvasElement.prototype.getContext = function (type, opts) {
     var ctx = _origGetContext.call(this, type, opts);
@@ -121,19 +167,23 @@
     return ctx;
   };
 
-  // ── 3. Parche jQuery: activar video al slide, canplaythrough garantizado ───
+  /* ── 4. Parche jQuery: canplaythrough garantizado + scroll desbloqueado ──
+     scripts.js espera canplaythrough para avanzar la timeline de animación.
+     Como en móvil el video puede tardar en bufferizar, garantizamos el
+     evento con un timeout adaptativo mientras intentamos reproducir.     */
   function patchJQuery() {
     var jq = window.jQuery || window.$;
     if (!jq || !jq.fn) { setTimeout(patchJQuery, 30); return; }
-    if (jq.fn._cesV9) return;
-    jq.fn._cesV9 = true;
+    if (jq.fn._cesV10) return;
+    jq.fn._cesV10 = true;
 
     var _origOn = jq.fn.on;
 
     jq.fn.on = function (events) {
       if (typeof events === 'string') {
 
-        // Bloquear scroll-hijack en páginas home/projects
+        /* Bloquear scroll-hijack: evita que scripts.js capture el scroll
+           del usuario en home-page / projects-page en móvil             */
         if (events.indexOf('DOMMouseScroll') > -1 ||
             events.indexOf('mousewheel')     > -1) {
           var el0 = this[0];
@@ -142,64 +192,56 @@
           }
         }
 
-        // Interceptar canplaythrough para activar + garantizar el evento
+        /* canplaythrough: registrar handler + garantizar disparo         */
         if (events.indexOf('canplaythrough') > -1) {
           var vid = this[0];
           if (vid && vid.tagName === 'VIDEO') {
 
-            // Registrar el handler de scripts.js primero
             var ret = _origOn.apply(this, arguments);
 
-            // Activar carga del video de este slide (si aún no cargó)
-            if (vid.preload === 'none' || vid.readyState < 1) {
+            /* Asegurar que el video esté cargando */
+            if (vid.readyState < 1) {
               vid.preload = 'auto';
-              try { vid.load(); } catch(e) {}
+              try { vid.load(); } catch (e) {}
             }
 
-            // Intentar reproducir
-            var tryPlay = function() {
-              var p; try { p = vid.play(); } catch(e) {}
-              if (p && p.catch) p.catch(function () {
-                setTimeout(function () { try { vid.play(); } catch(e) {} }, 300);
-              });
-            };
-            tryPlay();
+            /* Intentar reproducción */
+            _tryPlay(vid);
 
-            // Fallback garantizado: disparar canplaythrough según readyState
-            var rs = vid.readyState;
+            /* Timeout adaptativo según estado actual del buffer */
+            var rs    = vid.readyState;
             var delay = rs >= 4 ? 0
-                      : rs >= 3 ? 150
-                      : rs >= 2 ? 400
-                      : rs >= 1 ? 800
-                      : 1800;   // peor caso: video recién empieza a bajar
+                      : rs >= 3 ? 200
+                      : rs >= 2 ? 500
+                      : rs >= 1 ? 1000
+                      : 2200;   /* readyState 0: video recién empieza a bajar */
 
             var fired = false;
 
-            // Si llega el evento nativo antes del timeout, cancelar fallback
             var onNative = function () {
               fired = true;
               vid.removeEventListener('canplaythrough', onNative);
             };
             vid.addEventListener('canplaythrough', onNative);
 
-            // loadeddata también es suficiente para avanzar la timeline
+            /* loadeddata también es suficiente para avanzar */
             var onLoaded = function () {
               vid.removeEventListener('loadeddata', onLoaded);
               if (!fired) {
                 fired = true;
                 vid.removeEventListener('canplaythrough', onNative);
-                try { vid.dispatchEvent(new Event('canplaythrough')); } catch(e) {}
+                try { vid.dispatchEvent(new Event('canplaythrough')); } catch (e) {}
               }
             };
             vid.addEventListener('loadeddata', onLoaded);
 
-            // Timeout duro garantizado
+            /* Fallback duro: garantizado pase lo que pase */
             setTimeout(function () {
               vid.removeEventListener('loadeddata', onLoaded);
               if (!fired) {
                 fired = true;
                 vid.removeEventListener('canplaythrough', onNative);
-                try { vid.dispatchEvent(new Event('canplaythrough')); } catch(e) {}
+                try { vid.dispatchEvent(new Event('canplaythrough')); } catch (e) {}
               }
             }, delay);
 
@@ -211,7 +253,7 @@
     };
   }
 
-  // ── 4. NAV: desbloquear scroll cuando el menú está abierto ────────────────
+  /* ── 5. NAV: desbloquear overflow cuando el menú está abierto ───────────*/
   if (window.MutationObserver) {
     new MutationObserver(function () {
       if (document.body.style.overflow  === 'hidden' ||
@@ -230,7 +272,7 @@
     }).observe(document.body, { attributes: true, attributeFilter: ['style'] });
   }
 
-  // ── 5. Reload en cambio de orientación mobile ↔ desktop ──────────────────
+  /* ── 6. Reload en cambio mobile ↔ desktop ───────────────────────────────*/
   var _wasMobile = window.innerWidth < 1024;
   var _resizeTimer;
   window.addEventListener('resize', function () {
@@ -242,7 +284,7 @@
     }, 300);
   });
 
-  // ── Init ─────────────────────────────────────────────────────────────────
+  /* ── Init ────────────────────────────────────────────────────────────────*/
   patchJQuery();
 
 })();
