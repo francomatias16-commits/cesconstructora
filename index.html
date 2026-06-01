@@ -832,22 +832,35 @@
 </footer>
 
         <script>
-      /* Detectar mobile ANTES de que scripts.js defina window.app */
-      var _cesIsMobile = (
-        window.matchMedia ? window.matchMedia('(max-width: 1023px)').matches : false
-      ) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
       var app = {
         debug: true,
         mode: "prod",
         baseUrl: "",
         rootUri: "",
-        isMobile: _cesIsMobile,
+        isMobile: (window.matchMedia ? window.matchMedia('(max-width:1023px)').matches : false) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent),
         isTablet: window.app ? window.app.isTablet : false
       };
     </script>
             <script>window.jQuery || document.write('<script src="assets/js/lib/jquery-3.1.1.min.js"><\/script>')</script>
 
+            <script>
+    /* CES Mobile: interceptar scroll-hijack antes de que scripts.js lo registre */
+    (function() {
+      if (!window.app || !window.app.isMobile) return;
+      if (!window.jQuery) return;
+      var _on = jQuery.fn.on;
+      jQuery.fn.on = function(events) {
+        if (typeof events === 'string' &&
+            (events.indexOf('DOMMouseScroll') !== -1 || events.indexOf('mousewheel') !== -1)) {
+          var el = this[0];
+          if (el && (el.id === 'home-page' || el.id === 'projects-page')) {
+            return this; // bloquear registro
+          }
+        }
+        return _on.apply(this, arguments);
+      };
+    })();
+    </script>
             <script>
     /* ── Skip loading screen: agrega ?skip antes de que scripts.js lea la URL ── */
     (function(){
